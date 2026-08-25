@@ -15,8 +15,10 @@
   const dialogOverlay = document.getElementById("confirm-dialog");
   const confirmDeleteBtn = document.getElementById("confirm-delete-btn");
   const cancelDeleteBtn = document.getElementById("cancel-delete-btn");
+  const formMessage = document.getElementById("form-message");
 
   let pendingDeleteId = null;
+  let dialogTriggerEl = null;
 
   function loadMemos() {
     try {
@@ -29,7 +31,23 @@
   }
 
   function saveMemos(memos) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(memos));
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(memos));
+      return true;
+    } catch (e) {
+      console.error("メモの保存に失敗しました", e);
+      return false;
+    }
+  }
+
+  function showFormMessage(text) {
+    formMessage.textContent = text;
+    formMessage.hidden = false;
+  }
+
+  function clearFormMessage() {
+    formMessage.textContent = "";
+    formMessage.hidden = true;
   }
 
   function generateId() {
@@ -59,6 +77,7 @@
     idField.value = "";
     submitBtn.textContent = "保存する";
     cancelEditBtn.hidden = true;
+    clearFormMessage();
   }
 
   function escapeHtml(str) {
@@ -102,6 +121,7 @@
 
   form.addEventListener("submit", (e) => {
     e.preventDefault();
+    clearFormMessage();
 
     const target = targetField.value.trim();
     const content = contentField.value.trim();
@@ -109,7 +129,10 @@
       ? datetimeField.value
       : toDatetimeLocalValue(new Date());
 
-    if (!target || !content) return;
+    if (!target || !content) {
+      showFormMessage("対象と内容を入力してください。");
+      return;
+    }
 
     const memos = loadMemos();
     const editingId = idField.value;
@@ -123,7 +146,11 @@
       memos.push({ id: generateId(), target, datetime, content });
     }
 
-    saveMemos(memos);
+    if (!saveMemos(memos)) {
+      showFormMessage("メモの保存に失敗しました。保存容量が上限に達している可能性があります。");
+      return;
+    }
+
     resetForm();
     renderList();
   });
@@ -150,26 +177,50 @@
 
     if (deleteBtn) {
       pendingDeleteId = deleteBtn.dataset.id;
-      dialogOverlay.hidden = false;
+      openDialog(deleteBtn);
     }
   });
+
+  function openDialog(triggerEl) {
+    dialogTriggerEl = triggerEl;
+    dialogOverlay.hidden = false;
+    cancelDeleteBtn.focus();
+    document.addEventListener("keydown", handleDialogKeydown);
+  }
+
+  function closeDialog() {
+    dialogOverlay.hidden = true;
+    document.removeEventListener("keydown", handleDialogKeydown);
+    if (dialogTriggerEl) {
+      dialogTriggerEl.focus();
+      dialogTriggerEl = null;
+    }
+  }
+
+  function handleDialogKeydown(e) {
+    if (e.key === "Escape") {
+      pendingDeleteId = null;
+      closeDialog();
+    }
+  }
 
   confirmDeleteBtn.addEventListener("click", () => {
     if (pendingDeleteId) {
       const memos = loadMemos().filter((m) => m.id !== pendingDeleteId);
-      saveMemos(memos);
-      if (idField.value === pendingDeleteId) {
+      if (!saveMemos(memos)) {
+        showFormMessage("メモの削除に失敗しました。");
+      } else if (idField.value === pendingDeleteId) {
         resetForm();
       }
       pendingDeleteId = null;
     }
-    dialogOverlay.hidden = true;
+    closeDialog();
     renderList();
   });
 
   cancelDeleteBtn.addEventListener("click", () => {
     pendingDeleteId = null;
-    dialogOverlay.hidden = true;
+    closeDialog();
   });
 
   searchField.addEventListener("input", renderList);
