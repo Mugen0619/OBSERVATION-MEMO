@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>観察記録メモ</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>観察記録メモ</h1>
+    <p class="subtitle">対象・日時・内容をサッと記録するシンプルなメモアプリ</p>
+  </header>
+
+  <main>
+    <section class="form-section" aria-labelledby="form-heading">
+      <h2 id="form-heading">メモを書く</h2>
+      <form id="memo-form">
+        <input type="hidden" id="memo-id">
+
+        <div class="field">
+          <label for="target">対象</label>
+          <input type="text" id="target" placeholder="例）〇〇様 / 3号室" required>
+        </div>
+
+        <div class="field">
+          <label for="datetime">日時（未入力の場合は現在時刻）</label>
+          <input type="datetime-local" id="datetime">
+        </div>
+
+        <div class="field">
+          <label for="content">内容</label>
+          <textarea id="content" rows="4" placeholder="観察内容やメモを入力" required></textarea>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" id="submit-btn">保存する</button>
+          <button type="button" id="cancel-edit-btn" class="secondary" hidden>編集をキャンセル</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="list-section" aria-labelledby="list-heading">
+      <div class="list-header">
+        <h2 id="list-heading">メモ一覧</h2>
+        <input type="search" id="search" placeholder="対象・内容で検索">
+      </div>
+
+      <p id="empty-message" hidden>メモがまだありません。</p>
+      <ul id="memo-list"></ul>
+    </section>
+  </main>
+
+  <div id="confirm-dialog" class="dialog-overlay" hidden>
+    <div class="dialog-box" role="alertdialog" aria-modal="true" aria-labelledby="dialog-title">
+      <p id="dialog-title">このメモを削除しますか？</p>
+      <div class="dialog-actions">
+        <button id="confirm-delete-btn" class="danger">削除する</button>
+        <button id="cancel-delete-btn" class="secondary">キャンセル</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
